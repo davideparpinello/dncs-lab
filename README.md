@@ -117,4 +117,27 @@ The assignment deliverable consists of a Github repository containing:
 
 
 # Design
-[ Your work goes here ]
+The dcns-script assigned me 3 values that need to be the number of scalable hosts in the subnets. These 3 numbers are:
+ - 373 for host-A
+ - 302 for host-B
+ - 50 for host-C
+
+## Subnet
+I decided to create 4 subnets:
+
+- The first is between router-1 and router-2, for this subnet I used subnet 10.0.0.0/30 to cover only the 2 routers (2<sup>32-30</sup> - 2 = 2).
+- The second is between router-1 and host-a, in this case I used the subnet 192.168.1.0/23 to cover the 373 requested address (2<sup>32-23</sup> - 2 = 510).
+- The third is between router-1 and host-b, the subnet used is 192.168.3.0/23 that covers the 302 address (2<sup>32-23</sup> - 2 = 510).
+- The last is between router-2 and host-c, here I used the subnet 192.168.5.0/26 to cover all the 50 address (2<sup>32-26</sup> - 2 = 62)).
+
+## IP-Map and VLAN
+|  Device  | Interface |     IP      | Subnet |
+| :------: | :-------: | :---------: | :----: |
+| Router-1 |  enp0s9   |  10.0.0.1   |   1    |
+| Router-2 |  enp0s9   |  10.0.0.2   |   1    |
+| Router-1 | enp0s8.2  | 192.168.1.1 |   2    |
+|  Host-a  |  enp0s8   | 192.168.1.2 |   2    |
+| Router-1 | enp0s8.3  | 192.168.3.1 |   3    |
+|  Host-b  |  enp0s8   | 192.168.3.2 |   3    |
+| Router-2 |  enp0s8   | 192.168.5.1 |   4    |
+|  Host-c  |  enp0s8   | 192.168.5.2 |   4    |

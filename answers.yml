@@ -2,17 +2,17 @@ FirstName: Davide
 LastName: Parpinello
 MatriculationNumber: 201494
 AcademicYear: 2019-2020
-GitHubUrl: YourGithubRepositoryURL
+GitHubUrl: https://github.com/davideparpinello/dncs-lab
 Subnets:
   HostsA:
     RequiredAddresses: 373
-    SubnetAddress: YourHostsASubnetAddress
-    SubnetPrefixLength: YourHostsASubnetPrefixLength
+    SubnetAddress: 192.168.1.0
+    SubnetPrefixLength: 23
   HostsB:
     RequiredAddresses: 302
-    SubnetAddress: YourHostsBSubnetAddress
-    SubnetPrefixLength: YourHostsBSubnetPrefixLength
+    SubnetAddress: 192.168.3.0
+    SubnetPrefixLength: 23
   Hub:
     RequiredAddresses: 50
-    SubnetAddress: YourHubSubnetAddress
-    SubnetPrefixLength: YourHubSubnetPrefixLength
+    SubnetAddress: 192.168.5.0
+    SubnetPrefixLength: 26
