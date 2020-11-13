@@ -4,8 +4,8 @@ export DEBIAN_FRONTEND=noninteractive
 sudo ip addr add 192.168.5.2/26 dev enp0s8
 sudo ip link set dev enp0s8 up
 
-sudo apt update
-sudo apt -y install docker.io
+sudo apt-get update
+sudo apt-get -y install docker.io
 
 sudo systemctl start docker
 sudo systemctl enable docker
