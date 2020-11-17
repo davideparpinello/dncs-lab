@@ -73,7 +73,7 @@ router                    running (virtualbox)
 switch                    running (virtualbox)
 host-a                    running (virtualbox)
 host-b                    running (virtualbox)
-```
+ ```
 - Once all the VMs are running verify you can log into all of them:
 `vagrant ssh router`
 `vagrant ssh switch`
@@ -115,29 +115,102 @@ The assignment deliverable consists of a Github repository containing:
 - https://www.cyberciti.biz/faq/howto-linux-configuring-default-route-with-ipcommand/
 - https://www.vagrantup.com/intro/getting-started/
 
+# Team 👥
 
-# Design
-The dcns-script assigned me 3 values that need to be the number of scalable hosts in the subnets. These 3 numbers are:
- - 373 for host-A
- - 302 for host-B
- - 50 for host-C
+This project was done by Baccichet Giovanni (`202869`) and Parpinello Davide (`201494` - team leader).
 
-## Subnet
-I decided to create 4 subnets:
+# Design 💡
+We started by executing the dcns-init script, that returned us the different values that need to be the number of scalable hosts in the subnets:
 
-- The first is between router-1 and router-2, for this subnet I used subnet 10.0.0.0/30 to cover only the 2 routers (2<sup>32-30</sup> - 2 = 2).
-- The second is between router-1 and host-a, in this case I used the subnet 192.168.1.0/23 to cover the 373 requested address (2<sup>32-23</sup> - 2 = 510).
-- The third is between router-1 and host-b, the subnet used is 192.168.3.0/23 that covers the 302 address (2<sup>32-23</sup> - 2 = 510).
-- The last is between router-2 and host-c, here I used the subnet 192.168.5.0/26 to cover all the 50 address (2<sup>32-26</sup> - 2 = 62)).
+- Subnet (host-a): 373 hosts;
+- Subnet  (host-b): 302 hosts;
+- Subnet (host-c): 50 hosts.
 
-## IP-Map and VLAN
-|  Device  | Interface |     IP      | Subnet |
-| :------: | :-------: | :---------: | :----: |
-| Router-1 |  enp0s9   |  10.0.0.1   |   1    |
-| Router-2 |  enp0s9   |  10.0.0.2   |   1    |
-| Router-1 | enp0s8.2  | 192.168.1.1 |   2    |
-|  Host-a  |  enp0s8   | 192.168.1.2 |   2    |
-| Router-1 | enp0s8.3  | 192.168.3.1 |   3    |
-|  Host-b  |  enp0s8   | 192.168.3.2 |   3    |
-| Router-2 |  enp0s8   | 192.168.5.1 |   4    |
-|  Host-c  |  enp0s8   | 192.168.5.2 |   4    |
+### Subnets 📡
+
+Considering the design requirements, we decided to create 4 subnets. Doing some math, we calculated the most efficient way to organise the IP addresses:
+
+1. **Subnet 1** is between router-1 and router-2. We used private class-a addresses with the subnet `10.0.0.0/30` to cover only the 2 routers (2<sup>32-30</sup>-2=2);
+2. **Subnet 2** is between router-1 and host-a, and according to the design requirements it has a max number of host of 373. We used private class-c addresses for this subnet `192.168.1.0/23` (2<sup>32-23</sup>-2 = 510>373);
+3. **Subnet 3** is between router-1 and host-b. We used private class-c addresses with the subnet `192.168.3.0/23` to cover the 302 hosts (2<sup>32-23</sup>-2=510>302);
+4. **Subnet 4** is between router-2 and host-c. We used private class-c addresses with the subnet `192.168.5.0/26` to cover the 50 hosts (2<sup>32-26</sup>-2=62>50).
+
+### VLANs and IP configurations 💾
+
+<img src="network-config.jpg" width="650">
+
+| Device   | Interface predictable name | Interface | IP          | Subnet |
+| -------- | -------------------------- | --------- | ----------- | ------ |
+| Router-1 | enp0s9                     | eth2      | 10.0.0.1    | 1      |
+| Router-2 | enp0s9                     | eth2      | 10.0.0.2    | 1      |
+| Router-1 | enp0s8                     | eth1      | 192.168.1.1 | 2      |
+| Host-A   | enp0s8                     | eth1      | 192.168.1.2 | 2      |
+| Router-1 | enp0s8                     | eth1      | 192.168.3.1 | 3      |
+| Host-B   | enp0s8                     | eth1      | 192.168.3.2 | 3      |
+| Router-2 | enp0s8                     | eth1      | 192.168.5.1 | 4      |
+| Host-C   | enp0s8                     | eth1      | 192.168.5.2 | 4      |
+
+We then proceeded to create 2 VLANs, respectively for the subnets 2 and 3 with Tag `10` and `30`.
+
+# Vagrant configuration 🖥
+
+We included all the commands needed for the configuration of the network in a bash script for each of the devices. Those scripts will configure the network during the creation of the VMs, after the command `vagrant up`. These scripts are included in the `Vagrantfile` using the `provision` command. We also needed to increase the memory of `host-c` from 256 to 512 (MB), otherwise it would have been impossible to pull and run the Docker image; in order to do that we modified the option `vb.memory`.
+
+## Commands used 🔧
+
+Since the newer Debian-based distros use predictable names for network interfaces, we had to check what interfaces corresponded to `eth1`, `eth2` and `eth3`, to match the specifications given.
+We used the command `dmesg | grep -i eth` and put the results in the table above.
+- [**IP**] We then proceeded assigning an IP address to each interface, with the command `sudo ip addr add [IP_ADDR] dev [INTERFACE]`, then activating sed interface with `ip link set dev [INTERFACE] up`;
+- [**FORWARDING**] Then we enabled the IPv4 forwarding in the routers with `sysctl -w net.ipv4.ip_forward=1`; 
+- [**VLAN**] For creating the VLANs mentioned earlier, we used `ip link add link enp0s8 name enp0s8.10 type vlan id 10` and `ip link add link enp0s8 name enp0s8.30 type vlan id 30` and added IP addresses to the virtual interfaces with `addr add 192.168.1.1/23 dev enp0s8.10` and `ip addr add 192.168.3.1/23 dev enp0s8.30`;
+- [**ROUTE**] To create a route we used the `ip route add 192.168.5.0/26 via 10.0.0.2` command. The first parameter `192.168.5.0/26` corresponds to the network we want to reach, and after `via` there is the IP address of the next hop, that is the interface of the router placed in the subnet where the current host is. Every host that has to reach another subnet has specific routes that achieve this, but, in particular, some hosts have generic routes with destinations like `192.168.0.0/23`, with the purpose of designing the routes as generic as possible, covering the range `192.168.0.0 - 192.168.5.255`, that includes all of our host subnets.
+
+## Switch configuration 🔀
+
+We then had to setup the switch, assigning the VLAN tags to the ports. We created a bridge named “switch” with `ovs-vsctl add-br switch`.
+Then we configured the ports:
+```
+ovs-vsctl add-port switch enp0s8
+ovs-vsctl add-port switch enp0s9 tag="10"
+ovs-vsctl add-port switch enp0s10 tag="30"
+```
+## Host C configuration 🕸
+
+Since one design requirement was for the Host C to run a docker image, we proceeded with its configuration:
+```
+apt-get update
+apt-get -y install docker.io
+systemctl start docker
+systemctl enable docker
+docker pull dustnic82/nginx-test
+docker run --name nginx -p 80:80 -d dustnic82/nginx-test
+```
+To check if the Host C was reachable from the Host A and the Host B we executed from every one of them `curl 192.168.5.2`, resulting in the following output:
+```
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+    body {
+        width: 35em;
+        margin: 0 auto;
+        font-family: Tahoma, Verdana, Arial, sans-serif;
+    }
+</style>
+</head>
+<body>
+<h1>Welcome to nginx!</h1>
+<p>If you see this page, the nginx web server is successfully installed and
+working. Further configuration is required.</p>
+
+<p>For online documentation and support please refer to
+<a href="http://nginx.org/">nginx.org</a>.<br/>
+Commercial support is available at
+<a href="http://nginx.com/">nginx.com</a>.</p>
+
+<p><em>Thank you for using nginx.</em></p>
+</body>
+</html>
+```
+The output was correct.
