@@ -159,8 +159,8 @@ We included all the commands needed for the configuration of the network in a ba
 ## Commands used 🔧
 
 Since the newer Debian-based distros use predictable names for network interfaces, we had to check what interfaces corresponded to `eth1`, `eth2` and `eth3`, to match the specifications given.
-We used the command `dmesg | grep -i eth` and put the results in the table above.
-- [**IP**] We then proceeded assigning an IP address to each interface, with the command `sudo ip addr add [IP_ADDR] dev [INTERFACE]`, then activating sed interface with `ip link set dev [INTERFACE] up`;
+We used the command `dmesg | grep -i eth` and put the results in the table above. Every other command from now has to be executed by the superuser (adding `sudo` before the command).
+- [**IP**] We then proceeded assigning an IP address to each interface, with the command `ip addr add [IP_ADDR] dev [INTERFACE]`, then activating said interface with `ip link set dev [INTERFACE] up`;
 - [**FORWARDING**] Then we enabled the IPv4 forwarding in the routers with `sysctl -w net.ipv4.ip_forward=1`; 
 - [**VLAN**] For creating the VLANs mentioned earlier, we used `ip link add link enp0s8 name enp0s8.10 type vlan id 10` and `ip link add link enp0s8 name enp0s8.30 type vlan id 30` and added IP addresses to the virtual interfaces with `addr add 192.168.1.1/23 dev enp0s8.10` and `ip addr add 192.168.3.1/23 dev enp0s8.30`;
 - [**ROUTE**] To create a route we used the `ip route add 192.168.5.0/26 via 10.0.0.2` command. The first parameter `192.168.5.0/26` corresponds to the network we want to reach, and after `via` there is the IP address of the next hop, that is the interface of the router placed in the subnet where the current host is. Every host that has to reach another subnet has specific routes that achieve this, but, in particular, some hosts have generic routes with destinations like `192.168.0.0/23`, with the purpose of designing the routes as generic as possible, covering the range `192.168.0.0 - 192.168.5.255`, that includes all of our host subnets.
